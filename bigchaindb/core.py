@@ -70,15 +70,15 @@ class App(BaseApplication):
 
         logger.benchmark('CHECK_TX_INIT')
         logger.debug('check_tx: %s', raw_transaction)
-        transaction = decode_transaction(raw_transaction)
-        if self.bigchaindb.is_valid_transaction(transaction):
-            logger.debug('check_tx: VALID')
-            logger.benchmark('CHECK_TX_END, tx_id:%s', transaction['id'])
-            return ResponseCheckTx(code=CodeTypeOk)
-        else:
-            logger.debug('check_tx: INVALID')
-            logger.benchmark('CHECK_TX_END, tx_id:%s', transaction['id'])
-            return ResponseCheckTx(code=CodeTypeError)
+        # transaction = decode_transaction(raw_transaction)
+        # if self.bigchaindb.is_valid_transaction(transaction):
+        #     logger.debug('check_tx: VALID')
+        #     logger.benchmark('CHECK_TX_END, tx_id:%s', transaction['id'])
+        #     return ResponseCheckTx(code=CodeTypeOk)
+        # else:
+        #     logger.debug('check_tx: INVALID')
+        #     logger.benchmark('CHECK_TX_END, tx_id:%s', transaction['id'])
+        return ResponseCheckTx(code=CodeTypeError)
 
     def begin_block(self, req_begin_block):
         """Initialize list of transaction.
@@ -100,17 +100,21 @@ class App(BaseApplication):
         Args:
             raw_tx: a raw string (in bytes) transaction."""
         logger.debug('deliver_tx: %s', raw_transaction)
-        transaction = self.bigchaindb.is_valid_transaction(
-            decode_transaction(raw_transaction), self.block_transactions)
+        # transaction = self.bigchaindb.is_valid_transaction(
+        #     decode_transaction(raw_transaction), self.block_transactions)
 
-        if not transaction:
-            logger.debug('deliver_tx: INVALID')
-            return ResponseDeliverTx(code=CodeTypeError)
-        else:
-            logger.debug('storing tx')
-            self.block_txn_ids.append(transaction.id)
-            self.block_transactions.append(transaction)
-            return ResponseDeliverTx(code=CodeTypeOk)
+        # if not transaction:
+        #     logger.debug('deliver_tx: INVALID')
+        #     return ResponseDeliverTx(code=CodeTypeError)
+        # else:
+        #     logger.debug('storing tx')
+        #     self.block_txn_ids.append(transaction.id)
+        #     self.block_transactions.append(transaction)
+        from bigchaindb.common.transaction import Transaction
+        transaction = Transaction.from_dict(decode_transaction(raw_transaction))
+        self.block_txn_ids.append(transaction.id)
+        self.block_transactions.append(transaction)
+        return ResponseDeliverTx(code=CodeTypeOk)
 
     def end_block(self, request_end_block):
         """Calculate block hash using transaction ids and previous block
