@@ -2,6 +2,7 @@
 with Tendermint."""
 import logging
 import codecs
+import time
 
 from abci.application import BaseApplication
 from abci.types_pb2 import (
@@ -71,6 +72,8 @@ class App(BaseApplication):
         Args:
             raw_tx: a raw string (in bytes) transaction."""
 
+        return ResponseCheckTx(code=CodeTypeOk)
+
         logger.benchmark('CHECK_TX_INIT')
         logger.debug('check_tx: %s', raw_transaction)
         transaction = decode_transaction(raw_transaction)
@@ -89,9 +92,12 @@ class App(BaseApplication):
             req_begin_block: block object which contains block header
             and block hash.
         """
+
         logger.benchmark('BEGIN BLOCK, height:%s, num_txs:%s',
                          req_begin_block.header.height,
                          req_begin_block.header.num_txs)
+        self.ts_begin = time.time()
+        return ResponseBeginBlock()
 
         self.block_txn_ids = []
         self.block_transactions = []
@@ -103,6 +109,7 @@ class App(BaseApplication):
         Args:
             raw_tx: a raw string (in bytes) transaction."""
         logger.debug('deliver_tx: %s', raw_transaction)
+        return ResponseDeliverTx(code=CodeTypeOk)
         transaction = self.bigchaindb.is_valid_transaction(
             decode_transaction(raw_transaction), self.block_transactions)
 
@@ -121,6 +128,9 @@ class App(BaseApplication):
 
         Args:
             height (int): new height of the chain."""
+        logger.debug('END_BLOCK')
+
+        return ResponseEndBlock()
 
         height = request_end_block.height
         self.new_height = height
@@ -149,6 +159,8 @@ class App(BaseApplication):
 
     def commit(self):
         """Store the new height and along with block hash."""
+        logger.debug('============> Delta: %s' , (time.time() - self.ts_begin))
+        return ResponseCommit()
 
         data = self.block_txn_hash.encode('utf-8')
 
