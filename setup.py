@@ -77,7 +77,7 @@ install_requires = [
     'pysha3~=1.0.2',
     'cryptoconditions~=0.6.0.dev',
     'python-rapidjson==0.0.11',
-    'logstats~=0.2.1',
+    'logstats~=0.3.0',
     'flask>=0.10.1',
     'flask-cors~=3.0.0',
     'flask-restful~=0.3.0',

@@ -76,7 +76,7 @@ class BigchainDB(object):
         payload = {
             'method': mode,
             'jsonrpc': '2.0',
-            'params': [encode_transaction(transaction.to_dict())],
+            'params': [encode_transaction(transaction)],
             'id': str(uuid4())
         }
         # TODO: handle connection errors!

@@ -12,7 +12,8 @@ except ImportError:
 def encode_transaction(value):
     """Encode a transaction (dict) to Base64."""
 
-    return base64.b64encode(json.dumps(value).encode('utf8')).decode('utf8')
+    return base64.b64encode(value.encode('utf8')).decode('utf8')
+    # return base64.b64encode(json.dumps(value).encode('utf8')).decode('utf8')
 
 
 def decode_transaction(raw):

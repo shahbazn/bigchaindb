@@ -2,6 +2,7 @@
 with Tendermint."""
 import logging
 import codecs
+from datetime import datetime
 
 from abci.application import BaseApplication
 from abci.types_pb2 import (
@@ -42,10 +43,11 @@ class App(BaseApplication):
         self.block_transactions = []
         self.validators = None
         self.new_height = None
+        self.tx_count = 0
 
     def init_chain(self, genesis):
         """Initialize chain with block of height 0"""
-
+        return ResponseInitChain()
         validator_set = [decode_validator(v) for v in genesis.validators]
         block = Block(app_hash='', height=0, transactions=[])
         self.bigchaindb.store_block(block._asdict())
@@ -70,7 +72,7 @@ class App(BaseApplication):
 
         Args:
             raw_tx: a raw string (in bytes) transaction."""
-
+        return ResponseCheckTx(code=CodeTypeOk)
         logger.benchmark('CHECK_TX_INIT')
         logger.debug('check_tx: %s', raw_transaction)
         transaction = decode_transaction(raw_transaction)
@@ -95,6 +97,7 @@ class App(BaseApplication):
 
         self.block_txn_ids = []
         self.block_transactions = []
+        self.tx_count = 0
         return ResponseBeginBlock()
 
     def deliver_tx(self, raw_transaction):
@@ -102,6 +105,8 @@ class App(BaseApplication):
 
         Args:
             raw_tx: a raw string (in bytes) transaction."""
+        self.tx_count += 1
+        return ResponseDeliverTx(code=CodeTypeOk)
         logger.debug('deliver_tx: %s', raw_transaction)
         transaction = self.bigchaindb.is_valid_transaction(
             decode_transaction(raw_transaction), self.block_transactions)
@@ -122,6 +127,7 @@ class App(BaseApplication):
         Args:
             height (int): new height of the chain."""
 
+        return ResponseEndBlock()
         height = request_end_block.height
         self.new_height = height
         block_txn_hash = calculate_hash(self.block_txn_ids)
@@ -150,6 +156,8 @@ class App(BaseApplication):
     def commit(self):
         """Store the new height and along with block hash."""
 
+        print('COMMITED::::', datetime.now().isoformat(), self.tx_count)
+        return ResponseCommit()
         data = self.block_txn_hash.encode('utf-8')
 
         # register a new block only when new transactions are received
